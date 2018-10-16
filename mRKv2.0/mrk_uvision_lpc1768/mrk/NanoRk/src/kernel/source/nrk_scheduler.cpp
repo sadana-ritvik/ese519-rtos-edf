@@ -150,22 +150,25 @@ void _nrk_scheduler() {
 			
         // TODO: Replace the if condition below. If the task is disabled, skip it.
         // Hint: a task ID of -1 in an nrk_task_TCB entry indicates a task is disabled
-        if (true) {
-						
+        if (nrk_task_TCB[task_ID].task_ID == -1 ) {
+						continue;
 				}
         
         // TODO: Reset the current task's suspend flag
         // Note, this step changes nothing about the task's state -- just its suspend flag changes.
+				nrk_task_TCB[task_ID].suspend_flag = 0;
 				
         
         // TODO: Replace the if condition below. If the task is NOT the IDLE task and is NOT finished
         // then we want to consider the task, otherwise we can ignore it
-        if (true) {
+        if (nrk_task_TCB[task_ID].task_state != IDLE_TASK && nrk_task_TCB[task_ID].task_state != FINISHED) {
             
             // TODO: Implement Code Block 1 here
             // You need to update the value of next_wakeup for each task, keeping in mind
             // there are two situations that can arise.
             // Hint: next_wakeup is the number of ticks before the task will be woken up again
+						
+					
 
             
             // TODO: Implement Code Block 2 here
@@ -202,7 +205,10 @@ void _nrk_scheduler() {
         }
     }
    
-    nrk_high_ready_prio = nrk_task_TCB[task_ID].task_prio;
+    
+    task_ID = nrk_get_high_ready_task_ID();
+
+		nrk_high_ready_prio = nrk_task_TCB[task_ID].task_prio;
     nrk_high_ready_TCB = &nrk_task_TCB[task_ID];
     
     // next_wake should hold next time when a suspended task might get run

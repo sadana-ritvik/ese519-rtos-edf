@@ -82,7 +82,7 @@ typedef struct os_tcb {
     bool      suspend_flag;
     bool      nw_flag;                // allows user to wake up on event or nw;
     uint8_t   event_suspend;          // event 0 = no event ; 1-255 event type;
-    int8_t      task_ID;                // For quick reference later, -1 means not active     
+    int8_t      task_ID;              // For quick reference later, -1 means not active     
     uint8_t   task_state;             // Task status    
     uint8_t   task_prio;              // Task priority (0 == highest, 63 == lowest) 
     uint8_t   task_prio_ceil;         // Task priority (0 == highest, 63 == lowest)    
