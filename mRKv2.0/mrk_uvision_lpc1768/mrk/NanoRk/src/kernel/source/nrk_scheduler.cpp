@@ -167,15 +167,32 @@ void _nrk_scheduler() {
             // You need to update the value of next_wakeup for each task, keeping in mind
             // there are two situations that can arise.
             // Hint: next_wakeup is the number of ticks before the task will be woken up again
-						
+						if(nrk_task_TCB[task_ID].next_wakeup > _nrk_prev_timer_val)
+						{
+                nrk_task_TCB[task_ID].next_wakeup -= _nrk_prev_timer_val;
+						}
+            else
+            {
+                nrk_task_TCB[task_ID].next_wakeup = 0;
+            }
 					
 
-            
             // TODO: Implement Code Block 2 here
             // You need to update the value of next_period for each task, keeping in mind
             // there are three situations that can arise.
             // Hint: next_period is the number of ticks until the next period for a task starts
-
+            if(nrk_task_TCB[task_ID].next_period > _nrk_prev_timer_val)
+            {
+                nrk_task_TCB[task_ID].next_period -= _nrk_prev_timer_val;
+            }
+            else if(nrk_task_TCB[task_ID].next_period < _nrk_prev_timer_val)
+            {
+                printf("ERROR: deadline missed");
+            }
+            else
+            {
+                nrk_task_TCB[task_ID].next_period += nrk_task_TCB[task_ID].period;
+            }
             
         }
         
