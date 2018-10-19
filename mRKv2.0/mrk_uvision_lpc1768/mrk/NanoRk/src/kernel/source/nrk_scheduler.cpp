@@ -171,7 +171,7 @@ void _nrk_scheduler() {
 						{
                 nrk_task_TCB[task_ID].next_wakeup -= _nrk_prev_timer_val;
 						}
-            else
+            else if(nrk_task_TCB[task_ID].next_wakeup <= _nrk_prev_timer_val)
             {
                 nrk_task_TCB[task_ID].next_wakeup = 0;
             }
@@ -187,11 +187,11 @@ void _nrk_scheduler() {
             }
             else if(nrk_task_TCB[task_ID].next_period < _nrk_prev_timer_val)
             {
-                printf("ERROR: deadline missed");
+              printf("ERROR: deadline missed!! Task:%d\n", task_ID);
             }
             else
             {
-                nrk_task_TCB[task_ID].next_period += nrk_task_TCB[task_ID].period;
+                nrk_task_TCB[task_ID].next_period = nrk_task_TCB[task_ID].period;
             }
             
         }
@@ -199,26 +199,28 @@ void _nrk_scheduler() {
         // Here is where we add tasks to the ready queue
         if (nrk_task_TCB[task_ID].task_state == SUSPENDED) {
             // TODO: Recall Situation 1B from the lab appendix and replace the condition in the if statement below
-            if (true) {
+            if(nrk_task_TCB[task_ID].next_wakeup <= _nrk_prev_timer_val) {
                 // TODO: set the cpu_remaining, task_state, and next_wakeup for the current task
                 // Hints:
                 // For cpu_remaining, think about how long a task needs to execute
                 // For task_state, think about the state in which a task in the ready queue should be
                 // For next_wakeup, think about the next time we'd want to add this task to the ready queue
             
-                //nrk_task_TCB[task_ID].cpu_remaining = TODO
-                //nrk_task_TCB[task_ID].task_state    = TODO
-                //nrk_task_TCB[task_ID].next_wakeup   = TODO
+                nrk_task_TCB[task_ID].cpu_remaining = nrk_task_TCB[task_ID].cpu_reserve;
+                nrk_task_TCB[task_ID].task_state    = READY;
+                nrk_task_TCB[task_ID].next_wakeup   = nrk_task_TCB[task_ID].period;
             
                 // TODO: uncomment this line once you've implemented the rest of the for loop
-                //nrk_add_to_readyQ(task_ID);
+                nrk_add_to_readyQ(task_ID);
             
             }
             
             // TODO: Here you should set the value of next_wake (already declared for you)
             // to find the minimum next_wakeup within the tasks (excluding a next_wake value of 0)
-
-						
+            if( nrk_task_TCB[task_ID].next_wakeup !=0 && next_wake > nrk_task_TCB[task_ID].next_wakeup )
+            {
+                next_wake = nrk_task_TCB[task_ID].next_wakeup;
+            }
         }
     }
    
@@ -239,7 +241,10 @@ void _nrk_scheduler() {
         if (nrk_task_TCB[task_ID].cpu_reserve != 0 && nrk_task_TCB[task_ID].cpu_remaining < MAX_SCHED_WAKEUP_TIME) {
             // TODO: We need to check one more condition here, and if it's true, update the value of next_wake
             // Hint: Consult Figure 4 in the lab document
-            
+            if(next_wake > nrk_task_TCB[task_ID].cpu_remaining)
+            {
+                next_wake = nrk_task_TCB[task_ID].cpu_remaining;
+            }
 					
         } else {
             if (next_wake > MAX_SCHED_WAKEUP_TIME) {
