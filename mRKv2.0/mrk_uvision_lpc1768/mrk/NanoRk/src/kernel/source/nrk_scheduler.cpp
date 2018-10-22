@@ -54,19 +54,19 @@ DigitalOut led3(LED3);
 static void set_leds(int task_id, bool state) {
 	  switch (task_id) {
 			  case 1:
-					  led1 = state;
+					led1 = state;
 				    led2 = false;
 				    led3 = false;
 				    break;
 			  case 2:
-					  led1 = false;
-					  led2 = state;
+					led1 = false;
+					led2 = state;
 				    led3 = false;
 				    break;
 				case 3:
-					  led1 = false;
+					led1 = false;
 				    led2 = false;
-					  led3 = state;
+					led3 = state;
 				    break;
 			  default:
 					  led1 = false;
@@ -79,6 +79,8 @@ void _nrk_scheduler() {
     int8_t   task_ID;
     uint16_t next_wake;
     uint16_t start_time_stamp;
+    uint16_t min_period;
+    int8_t min_task_ID;
 	
     nrk_int_disable();
 	
@@ -91,7 +93,7 @@ void _nrk_scheduler() {
 	  // Set to huge number which will later get set to min
     _nrk_set_next_wakeup(MAX_SCHED_WAKEUP_TIME);
     next_wake = 60000;
-	
+	min_period = 60000;
     // Safety zone starts here....
     
     nrk_system_time.nano_secs += ((uint32_t)_nrk_prev_timer_val * NANOS_PER_TICK);
@@ -151,13 +153,13 @@ void _nrk_scheduler() {
         // TODO: Replace the if condition below. If the task is disabled, skip it.
         // Hint: a task ID of -1 in an nrk_task_TCB entry indicates a task is disabled
         if (nrk_task_TCB[task_ID].task_ID == -1 ) {
-						continue;
-				}
+			continue;
+		}
         
         // TODO: Reset the current task's suspend flag
         // Note, this step changes nothing about the task's state -- just its suspend flag changes.
-				nrk_task_TCB[task_ID].suspend_flag = 0;
-				
+		nrk_task_TCB[task_ID].suspend_flag = 0; /* Verify !!!*/
+		//nrk_cur_task_TCB->suspend_flag = 0;
         
         // TODO: Replace the if condition below. If the task is NOT the IDLE task and is NOT finished
         // then we want to consider the task, otherwise we can ignore it
@@ -167,10 +169,10 @@ void _nrk_scheduler() {
             // You need to update the value of next_wakeup for each task, keeping in mind
             // there are two situations that can arise.
             // Hint: next_wakeup is the number of ticks before the task will be woken up again
-						if(nrk_task_TCB[task_ID].next_wakeup > _nrk_prev_timer_val)
-						{
+			if(nrk_task_TCB[task_ID].next_wakeup > _nrk_prev_timer_val)
+			{
                 nrk_task_TCB[task_ID].next_wakeup -= _nrk_prev_timer_val;
-						}
+			}
             else if(nrk_task_TCB[task_ID].next_wakeup <= _nrk_prev_timer_val)
             {
                 nrk_task_TCB[task_ID].next_wakeup = 0;
@@ -187,7 +189,9 @@ void _nrk_scheduler() {
             }
             else if(nrk_task_TCB[task_ID].next_period < _nrk_prev_timer_val)
             {
-              printf("ERROR: deadline missed!! Task:%d\n", task_ID);
+                nrk_task_TCB[task_ID].next_period = nrk_task_TCB[task_ID].period;
+                printf("ERROR: deadline missed!!\n");
+                
             }
             else
             {
@@ -199,7 +203,7 @@ void _nrk_scheduler() {
         // Here is where we add tasks to the ready queue
         if (nrk_task_TCB[task_ID].task_state == SUSPENDED) {
             // TODO: Recall Situation 1B from the lab appendix and replace the condition in the if statement below
-            if(nrk_task_TCB[task_ID].next_wakeup <= _nrk_prev_timer_val) {
+            if(nrk_task_TCB[task_ID].next_wakeup == 0) { /**verify!!*/
                 // TODO: set the cpu_remaining, task_state, and next_wakeup for the current task
                 // Hints:
                 // For cpu_remaining, think about how long a task needs to execute
@@ -208,11 +212,10 @@ void _nrk_scheduler() {
             
                 nrk_task_TCB[task_ID].cpu_remaining = nrk_task_TCB[task_ID].cpu_reserve;
                 nrk_task_TCB[task_ID].task_state    = READY;
-                nrk_task_TCB[task_ID].next_wakeup   = nrk_task_TCB[task_ID].period;
+                nrk_task_TCB[task_ID].next_wakeup   = nrk_task_TCB[task_ID].next_period;
             
                 // TODO: uncomment this line once you've implemented the rest of the for loop
-                nrk_add_to_readyQ(task_ID);
-            
+                nrk_add_to_readyQ(task_ID); 
             }
             
             // TODO: Here you should set the value of next_wake (already declared for you)
@@ -223,11 +226,19 @@ void _nrk_scheduler() {
             }
         }
     }
-   
     
+    #ifndef SCHED_PRIO_DYNAMIC
     task_ID = nrk_get_high_ready_task_ID();
-
-		nrk_high_ready_prio = nrk_task_TCB[task_ID].task_prio;
+    nrk_high_ready_prio = nrk_task_TCB[task_ID].task_prio;
+    #else
+    
+    // try :- get node in ready queue function
+    
+        //task_ID = min_task_ID;
+    nrk_high_ready_prio = NRK_MAX_TASKS;
+    nrk_high_ready_prio = nrk_task_TCB[task_ID].task_prio;
+    #endif
+	
     nrk_high_ready_TCB = &nrk_task_TCB[task_ID];
     
     // next_wake should hold next time when a suspended task might get run
@@ -248,8 +259,8 @@ void _nrk_scheduler() {
 					
         } else {
             if (next_wake > MAX_SCHED_WAKEUP_TIME) {
-						    next_wake = MAX_SCHED_WAKEUP_TIME;
-						}
+                next_wake = MAX_SCHED_WAKEUP_TIME;
+			}
         }
     } else {
 #ifndef NRK_NO_POWER_DOWN
@@ -275,13 +286,13 @@ void _nrk_scheduler() {
 		}
 #endif
 		
-		// The code block below is used to test your scheduler.
-		// DO NOT MODIFY!
-		if (nrk_cur_task_TCB->task_ID != nrk_high_ready_TCB->task_ID) {
-				printf("Scheduling in task %d\r\n", nrk_high_ready_TCB->task_ID);
-				set_leds(nrk_cur_task_TCB->task_ID, false);
-				set_leds(nrk_high_ready_TCB->task_ID, true);
-		}
+    // The code block below is used to test your scheduler.
+    // DO NOT MODIFY!
+    if (nrk_cur_task_TCB->task_ID != nrk_high_ready_TCB->task_ID) {
+            printf("Scheduling in task %d\r\n", nrk_high_ready_TCB->task_ID);
+            set_leds(nrk_cur_task_TCB->task_ID, false);
+            set_leds(nrk_high_ready_TCB->task_ID, true);
+    }
 		
     nrk_cur_task_prio = nrk_high_ready_prio;
     nrk_cur_task_TCB  = nrk_high_ready_TCB;
