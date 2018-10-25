@@ -78,10 +78,10 @@ void nrk_create_taskset() {
     TaskTwo.FirstActivation = TRUE;
     TaskTwo.Type = BASIC_TASK;
     TaskTwo.SchType = PREEMPTIVE;
-    TaskTwo.period.secs = 1;
-    TaskTwo.period.nano_secs = 000*NANOS_PER_MS;
+    TaskTwo.period.secs = 0;
+    TaskTwo.period.nano_secs = 700*NANOS_PER_MS;
     TaskTwo.cpu_reserve.secs = 0;
-    TaskTwo.cpu_reserve.nano_secs = 300*NANOS_PER_MS;
+    TaskTwo.cpu_reserve.nano_secs = 200*NANOS_PER_MS;
     TaskTwo.offset.secs = 0;
     TaskTwo.offset.nano_secs = 0;
     nrk_activate_task (&TaskTwo);
@@ -93,9 +93,9 @@ void nrk_create_taskset() {
     TaskThree.Type = BASIC_TASK;
     TaskThree.SchType = PREEMPTIVE;
     TaskThree.period.secs = 1;
-    TaskThree.period.nano_secs = 500*NANOS_PER_MS;
+    TaskThree.period.nano_secs = 400*NANOS_PER_MS;
     TaskThree.cpu_reserve.secs = 0;
-    TaskThree.cpu_reserve.nano_secs = 400*NANOS_PER_MS;
+    TaskThree.cpu_reserve.nano_secs = 500*NANOS_PER_MS;
     TaskThree.offset.secs = 0;
     TaskThree.offset.nano_secs = 0;
     nrk_activate_task (&TaskThree);

@@ -201,7 +201,7 @@ nrk_status_t nrk_activate_task (nrk_task_type * Task)
 
     topOfStackPtr = (NRK_STK *) nrk_task_stk_init (Task->task, Task->Ptos, Task->Pbos);
 
-    //printf("activate %d\n",(int)Task.task_ID);
+    //printf("activate %d\n",(int)Task->task_ID);
     if (Task->FirstActivation == TRUE)
     {
         rtype = nrk_TCB_init (Task, topOfStackPtr, Task->Pbos, 0, (void *) 0, 0);

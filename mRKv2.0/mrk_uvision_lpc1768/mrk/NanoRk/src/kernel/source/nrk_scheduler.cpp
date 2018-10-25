@@ -80,7 +80,7 @@ void _nrk_scheduler() {
     uint16_t next_wake;
     uint16_t start_time_stamp;
     uint16_t min_period;
-    int8_t min_task_ID;
+    int8_t min_task_ID = 0;
 	
     nrk_int_disable();
 	
@@ -163,7 +163,7 @@ void _nrk_scheduler() {
         
         // TODO: Replace the if condition below. If the task is NOT the IDLE task and is NOT finished
         // then we want to consider the task, otherwise we can ignore it
-        if (nrk_task_TCB[task_ID].task_state != IDLE_TASK && nrk_task_TCB[task_ID].task_state != FINISHED) {
+        if (nrk_task_TCB[task_ID].task_ID != NRK_IDLE_TASK_ID && nrk_task_TCB[task_ID].task_state != FINISHED) {
             
             // TODO: Implement Code Block 1 here
             // You need to update the value of next_wakeup for each task, keeping in mind
@@ -189,6 +189,7 @@ void _nrk_scheduler() {
             }
             else if(nrk_task_TCB[task_ID].next_period < _nrk_prev_timer_val)
             {
+                // Adding this line so that we can recover from a deadline miss!!
                 nrk_task_TCB[task_ID].next_period = nrk_task_TCB[task_ID].period;
                 printf("ERROR: deadline missed!!\n");
                 
@@ -229,16 +230,22 @@ void _nrk_scheduler() {
     
     #ifndef SCHED_PRIO_DYNAMIC
     task_ID = nrk_get_high_ready_task_ID();
-    nrk_high_ready_prio = nrk_task_TCB[task_ID].task_prio;
     #else
     
     // try :- get node in ready queue function
-    
-        //task_ID = min_task_ID;
-    nrk_high_ready_prio = NRK_MAX_TASKS;
-    nrk_high_ready_prio = nrk_task_TCB[task_ID].task_prio;
+    for(task_ID = 1; task_ID < NRK_MAX_TASKS; task_ID++)
+    {
+        if(nrk_present_in_readyQ(task_ID)){
+            if(nrk_task_TCB[task_ID].next_period < min_period)
+            {
+                min_period = nrk_task_TCB[task_ID].next_period;
+                min_task_ID = task_ID;
+            }
+        }
+    }
+    task_ID = min_task_ID;
     #endif
-	
+	nrk_high_ready_prio = nrk_task_TCB[task_ID].task_prio;
     nrk_high_ready_TCB = &nrk_task_TCB[task_ID];
     
     // next_wake should hold next time when a suspended task might get run
